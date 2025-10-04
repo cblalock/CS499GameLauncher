@@ -48,7 +48,7 @@ export default function GameLauncher() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-green-900 via-gold-900 to-gold-900 m-0 p-0">
+    <div className="min-h-screen w-full bg-gradient-to-br from-green-900 via-gold-900 to-yellow-600 m-0 p-0">
       {/* Header */}
       <header className="bg-black bg-opacity-50 backdrop-blur-sm border-b border-white border-opacity-10">
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -98,7 +98,7 @@ export default function GameLauncher() {
                         e.stopPropagation();
                         handleLaunch(game);
                       }}
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                      className="bg-green-900 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
                     >
                       <Download className="w-4 h-4" />
                       <span>Download</span>
@@ -114,7 +114,7 @@ export default function GameLauncher() {
         <div className="flex justify-center">
           <button
             onClick={() => alert('Add game functionality - you can implement a form to add new games')}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all"
+            className="bg-gradient-to-r from-green-900 to-yellow-600 hover:from-yellow-600 hover:to-green-900 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all"
           >
             + Add New Game
           </button>
