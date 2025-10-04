@@ -1,3 +1,19 @@
+# install nodejs v22.20.0
+# cd to root folder ( has public folder, src folder, package.json, etc )
+# npm install ( will create node_modules folder )
+# npm run dev
+# go to local host link in web browser
+### if getting some error message about tailwind it's the version.. this should be automatic since i put it in the package.json
+### but the line for correct tailwind v3 is: npm install -D tailwindcss@^3 postcss autoprefixer
+
+
+
+
+
+
+
+
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
