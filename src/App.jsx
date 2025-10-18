@@ -5,6 +5,7 @@ import Games from "./components/Games";
 import Achievements from "./components/Achievements";
 import GameModal from "./components/GameModal";
 import Settings from "./components/Settings";
+import Profile from "./components/Profile";
 
 export default function App() {
   const [games, setGames] = useState([
@@ -69,87 +70,88 @@ export default function App() {
   };
 
   return (
-    <div
-      className={`min-h-screen w-full flex flex-col ${
-        darkMode
-          ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700"
-          : "bg-gradient-to-br from-green-800 via-gray-300 to-yellow-400"
-      }`}
-    >
+  <div
+    className={`min-h-screen w-full flex ${
+      darkMode
+        ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700"
+        : "bg-gradient-to-br from-green-800 via-gray-300 to-yellow-400"
+    }`}
+  >
+    <Sidebar
+      sidebarOpen={sidebarOpen}
+      setSidebarOpen={setSidebarOpen}
+      selectedTab={selectedTab}
+      setSelectedTab={setSelectedTab}
+      games={games}
+      setActiveGame={setActiveGame}
+      darkMode={darkMode}
+      sidebarPosition={sidebarPosition}
+    />
+
+    <div className={`flex-1 flex flex-col transition-all duration-300 ${
+      sidebarOpen ? "ml-80" : "ml-0"
+    }`}>
       <Header
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         darkMode={darkMode}
-        setDarkMode={setDarkMode}
       />
 
-      <div className="flex flex-1">
-        <Sidebar
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-          selectedTab={selectedTab}
-          setSelectedTab={setSelectedTab}
-          games={games}
-          setActiveGame={setActiveGame}
-          darkMode={darkMode}
-          sidebarPosition={sidebarPosition}
-        />
+      <main className="flex-1 p-6">
+        {selectedTab === "Games" && (
+          <Games
+            games={games}
+            setSelectedGame={setSelectedGame}
+            handleLaunch={handleLaunch}
+            darkMode={darkMode}
+            thumbnailSize={thumbnailSize}
+          />
+        )}
 
-        <main
-          className={`flex-1 transition-all duration-300 ${
-            sidebarOpen ? "ml-80" : "ml-0"
-          } p-6`}
-        >
-          {selectedTab === "Games" && (
-            <Games
-              games={games}
-              setSelectedGame={setSelectedGame}
-              handleLaunch={handleLaunch}
-              darkMode={darkMode}
-              thumbnailSize={thumbnailSize}
-            />
-          )}
+        {selectedTab === "Achievements" && (
+          <Achievements
+            achievements={achievements}
+            activeGame={activeGame}
+            setActiveGame={setActiveGame}
+            games={games}
+            darkMode={darkMode}
+          />
+        )}
 
-          {selectedTab === "Achievements" && (
-            <Achievements
-              achievements={achievements}
-              activeGame={activeGame}
-              setActiveGame={setActiveGame}
-              games={games}
-              darkMode={darkMode}
-            />
-          )}
+        {selectedTab === "Profile" && (
+          <Profile games={games} darkMode={darkMode} />
+        )}
 
-          {selectedTab === "Settings" && (
-            <Settings
-              darkMode={darkMode}
-              setDarkMode={setDarkMode}
-              sidebarPosition={sidebarPosition}
-              setSidebarPosition={setSidebarPosition}
-              thumbnailSize={thumbnailSize}
-              setThumbnailSize={setThumbnailSize}
-              defaultTab={defaultTab}
-              setDefaultTab={setDefaultTab}
-              notifications={notifications}
-              setNotifications={setNotifications}
-              soundEffects={soundEffects}
-              setSoundEffects={setSoundEffects}
-              language={language}
-              setLanguage={setLanguage}
-            />
-          )}
-        </main>
-      </div>
-
-      {selectedGame && (
-        <GameModal
-          selectedGame={selectedGame}
-          handleLaunch={handleLaunch}
-          onClose={() => setSelectedGame(null)}
-          darkMode={darkMode}
-        />
-      )}
+        {selectedTab === "Settings" && (
+          <Settings
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            sidebarPosition={sidebarPosition}
+            setSidebarPosition={setSidebarPosition}
+            thumbnailSize={thumbnailSize}
+            setThumbnailSize={setThumbnailSize}
+            defaultTab={defaultTab}
+            setDefaultTab={setDefaultTab}
+            notifications={notifications}
+            setNotifications={setNotifications}
+            soundEffects={soundEffects}
+            setSoundEffects={setSoundEffects}
+            language={language}
+            setLanguage={setLanguage}
+          />
+        )}
+      </main>
     </div>
-  );
+
+    {selectedGame && (
+      <GameModal
+        selectedGame={selectedGame}
+        handleLaunch={handleLaunch}
+        onClose={() => setSelectedGame(null)}
+        darkMode={darkMode}
+      />
+    )}
+  </div>
+);
 }
 
