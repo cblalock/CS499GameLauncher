@@ -1,10 +1,44 @@
 import { Mail, Trophy, Award, LogIn, LogOut } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Profile({ currentUser, setCurrentUser, games, darkMode }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [backendScores, setBackendScores] = useState(""); // backend scores
+  const [backendAch, setBackendAch] = useState (""); // backend achievements
+
+  useEffect(() => {
+  if (currentUser) {
+    fetch(`http://localhost:3000/api/scores/${currentUser.username}`)
+      .then(res => res.json())
+      .then(scores => {
+        console.log('Raw scores from backend:', scores);
+        const formattedScores = scores.map(score => {
+          return {
+            gameId: score.game_id,
+            gameTitle: score.game_title,
+            thumbnail: score.thumbnail,
+            highScore: score.high_score
+          };
+        });
+        console.log('Formatted scores:', formattedScores); // testing scores in console
+        setBackendScores(formattedScores);
+      })
+      .catch(err => console.error('Error fetching scores:', err));
+      // fetch earned achievements from backend
+      fetch(`http://localhost:3000/api/achievements/earned/${currentUser.username}`)
+        .then(res => res.json())
+        .then(achievements => {
+          console.log('Achievements from backend:', achievements);
+          setBackendAchievements(achievements);
+        })
+        .catch(err => console.error('Error fetching achievements:', err));
+  } else {
+    setBackendScores([]);
+    setBackendAch([]);
+  }
+}, [currentUser]);
 
   // Dummy user accounts
   const users = [
@@ -63,11 +97,14 @@ export default function Profile({ currentUser, setCurrentUser, games, darkMode }
 
   // Calculate user's high scores for each game (from backend in future)
   const getUserHighScores = () => {
+    if (backendScores.length > 0) {
+      return backendScores;
+    }
     return games.map(game => ({
       gameId: game.id,
       gameTitle: game.title,
       thumbnail: game.thumbnail,
-      highScore: game.score || 0 // This will come from backend based on currentUser
+      highScore:  0 // no score if not fetched from backend
     }));
   };
 
