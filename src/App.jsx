@@ -7,7 +7,11 @@ import GameModal from "./components/GameModal";
 import Settings from "./components/Settings";
 import Profile from "./components/Profile";
 
+
 export default function App() {
+
+  const [currentUser, setCurrentUser] = useState(null); // logged in user state
+  
   const [games, setGames] = useState([
     {
       id: 1,
@@ -18,7 +22,7 @@ export default function App() {
       downloadUrl: "/games/Glycolysim.zip",
       playInBrowser: false,
       lastPlayed: "2 days ago",
-      score: 500,
+      score: 400,
     },
     {
       id: 2,
@@ -40,7 +44,7 @@ export default function App() {
   const [activeGame, setActiveGame] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
 
-  // New settings states
+  // settings states
   const [sidebarPosition, setSidebarPosition] = useState("left");
   const [thumbnailSize, setThumbnailSize] = useState("medium");
   const [defaultTab, setDefaultTab] = useState("Games");
@@ -74,7 +78,7 @@ export default function App() {
     className={`min-h-screen w-full flex ${
       darkMode
         ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700"
-        : "bg-gradient-to-br from-green-800 via-gray-300 to-yellow-400"
+        : "bg-gradient-to-br from-green-800 via-zinc-300 to-yellow-400"
     }`}
   >
     <Sidebar
@@ -119,7 +123,11 @@ export default function App() {
         )}
 
         {selectedTab === "Profile" && (
-          <Profile games={games} darkMode={darkMode} />
+          <Profile 
+          currentUser={currentUser} 
+          setCurrentUser={setCurrentUser}
+          games={games} 
+          darkMode={darkMode} />
         )}
 
         {selectedTab === "Settings" && (
