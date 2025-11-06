@@ -46,32 +46,6 @@ function initializeDatabase() {
       )
     `);
 
-    // Achievements table
-    db.run(`
-      CREATE TABLE IF NOT EXISTS achievements (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        game_id INTEGER,
-        name TEXT NOT NULL,
-        description TEXT,
-        total INTEGER DEFAULT 1,
-        FOREIGN KEY (game_id) REFERENCES games(id)
-      )
-    `);
-
-    // User Achievements table
-    db.run(`
-      CREATE TABLE IF NOT EXISTS user_achievements (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL,
-        achievement_id INTEGER,
-        current INTEGER DEFAULT 0,
-        earned BOOLEAN DEFAULT 0,
-        earned_at DATETIME,
-        FOREIGN KEY (achievement_id) REFERENCES achievements(id),
-        UNIQUE(username, achievement_id)
-      )
-    `);
-
     console.log('Database tables initialized');
     seedDatabase();
   });
@@ -97,7 +71,8 @@ function seedDatabase() {
         ('user1', 1, 350),
         ('user1', 2, 500),
         ('user2', 1, 600),
-        ('user3', 2, 200)
+        ('user3', 2, 200),
+        ('user3', 1, 900)
       `);
 
       console.log('Test data seeded');
@@ -160,79 +135,26 @@ app.post('/api/scores', (req, res) => {
     }
   );
 });
-
-// Get achievements for a game
-app.get('/api/achievements/game/:gameId', (req, res) => {
-  const { gameId } = req.params;
-
-  db.all('SELECT * FROM achievements WHERE game_id = ?', [gameId], (err, achievements) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
-    res.json(achievements);
-  });
-});
-
-// Get user's achievement progress for a game
-app.get('/api/achievements/:username/:gameId', (req, res) => {
-  const { username, gameId } = req.params;
+// leaderboard
+app.get('/api/leaderboard/:gameId', (req, res) => {
+  const {gameId} = req.params;
+  const limit = req.query.limit || 100;
 
   db.all(
-    `SELECT a.id, a.name, a.description, a.total,
-            COALESCE(ua.current, 0) as current, 
-            COALESCE(ua.earned, 0) as earned,
-            ua.earned_at
-     FROM achievements a
-     LEFT JOIN user_achievements ua ON a.id = ua.achievement_id AND ua.username = ?
-     WHERE a.game_id = ?`,
-    [username, gameId],
-    (err, achievements) => {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
+    `SELECT username as name, username as id, MAX(score) as score
+     FROM scores
+     WHERE game_id = ?
+     GROUP BY username
+     ORDER BY score DESC
+     LIMIT ?`,
+    [gameId, limit],
+    (err, leaderboard) => {
+      if(err){
+        return res.status(500).json({error: 'Database error'});
       }
-      res.json(achievements);
+      res.json(leaderboard);
     }
   );
-});
-
-// Update achievement progress from game
-app.post('/api/achievements/progress', (req, res) => {
-  const { username, achievementId, current } = req.body;
-
-  if (!username || !achievementId || current === undefined) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
-  // Get the achievement total to check if it should be earned
-  db.get('SELECT total FROM achievements WHERE id = ?', [achievementId], (err, achievement) => {
-    if (err || !achievement) {
-      return res.status(500).json({ error: 'Achievement not found' });
-    }
-
-    const earned = current >= achievement.total ? 1 : 0;
-    const earnedAt = earned ? new Date().toISOString() : null;
-
-    db.run(
-      `INSERT INTO user_achievements (username, achievement_id, current, earned, earned_at)
-       VALUES (?, ?, ?, ?, ?)
-       ON CONFLICT(username, achievement_id) DO UPDATE SET
-       current = ?,
-       earned = ?,
-       earned_at = COALESCE(earned_at, ?)`,
-      [username, achievementId, current, earned, earnedAt, current, earned, earnedAt],
-      function(err) {
-        if (err) {
-          return res.status(500).json({ error: 'Error updating achievement' });
-        }
-        res.json({ 
-          message: 'Achievement progress updated',
-          current,
-          earned: earned === 1,
-          earnedAt 
-        });
-      }
-    );
-  });
 });
 
 // ==================== START SERVER ====================
