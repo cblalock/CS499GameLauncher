@@ -8,36 +8,30 @@ import Settings from "./components/Settings";
 import Profile from "./components/Profile";
 import LeaderboardPage from "./components/LeaderboardPage";
 
+const API_BASE_URL = "http://localhost:3000/api";
 
 export default function App() {
 
   const [currentUser, setCurrentUser] = useState(null); // logged in user state
   const [selectedLeaderboardGame, setSelectedLeaderboardGame] = useState(1); // which games leaderboard
-  
-  const [games, setGames] = useState([
-    {
-      id: 1,
-      title: "Glycolysim",
-      description: "tetris or something with molecules",
-      thumbnail:
-        "https://images.unsplash.com/photo-1576086639808-ddfd21aa668c?q=80&w=880&auto=format&fit=crop",
-      downloadUrl: "/games/Glycolysim.zip",
-      playInBrowser: false,
-      lastPlayed: "2 days ago",
-      score: 400,
-    },
-    {
-      id: 2,
-      title: "ImmunoHeroes",
-      description: "idk what this game is about either",
-      thumbnail:
-        "https://plus.unsplash.com/premium_photo-1725667172926-0a33e2fc1596?q=80&w=1605&auto=format&fit=crop",
-      downloadUrl: "/games/ImmunoHeroes.zip",
-      playInBrowser: false,
-      lastPlayed: "1 week ago",
-      score: 500,
-    },
-  ]);
+
+  const [games, setGames] = useState([]); // set games array empty then fetch
+  const [gamesLoading, setGamesLoading] = useState(true);
+  useEffect(() => {
+    console.log('Fetching games from backend...');
+    fetch(`${API_BASE_URL}/games`)
+      .then((res) => res.json())
+      .then((gamesData) => {
+        console.log('Games loaded:', gamesData);
+        setGames(gamesData);
+      })
+      .catch((error) => {
+        console.error('Error fetching games:', error);
+      })
+      .finally(() => {
+        setGamesLoading(false);
+      });
+  }, []);
 
   const [selectedGame, setSelectedGame] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
