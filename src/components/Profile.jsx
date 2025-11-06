@@ -6,7 +6,7 @@ export default function Profile({ currentUser, setCurrentUser, games, darkMode }
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [backendScores, setBackendScores] = useState(""); // backend scores
-  const [backendAch, setBackendAch] = useState (""); // backend achievements
+  
 
   useEffect(() => {
   if (currentUser) {
@@ -26,17 +26,8 @@ export default function Profile({ currentUser, setCurrentUser, games, darkMode }
         setBackendScores(formattedScores);
       })
       .catch(err => console.error('Error fetching scores:', err));
-      // fetch earned achievements from backend
-      fetch(`http://localhost:3000/api/achievements/earned/${currentUser.username}`)
-        .then(res => res.json())
-        .then(achievements => {
-          console.log('Achievements from backend:', achievements);
-          setBackendAchievements(achievements);
-        })
-        .catch(err => console.error('Error fetching achievements:', err));
   } else {
     setBackendScores([]);
-    setBackendAch([]);
   }
 }, [currentUser]);
 
@@ -280,21 +271,6 @@ export default function Profile({ currentUser, setCurrentUser, games, darkMode }
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Achievements Section */}
-      <div className={`rounded-lg p-6 border ${
-        darkMode 
-          ? "bg-gray-800 border-gray-700" 
-          : "bg-white bg-opacity-10 backdrop-blur-md border-yellow-400"
-      }`}>
-        <h3 className={`text-2xl font-bold mb-4 flex items-center gap-2 ${darkMode ? "text-white" : "text-white"}`}>
-          <Award className="w-6 h-6 text-yellow-400" />
-          My Achievements
-        </h3>
-        <p className={`text-center py-8 ${darkMode ? "text-gray-400" : "text-white"}`}>
-          Achievements will be loaded from the backend when integrated
-        </p>
       </div>
     </section>
   );
