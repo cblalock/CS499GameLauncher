@@ -5,31 +5,31 @@ export default function Profile({ currentUser, setCurrentUser, games, darkMode }
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [backendScores, setBackendScores] = useState(""); // backend scores
+  const [backendScores, setBackendScores] = useState([]); // backend scores
   
 
   useEffect(() => {
-  if (currentUser) {
-    fetch(`http://localhost:3000/api/scores/${currentUser.username}`)
-      .then(res => res.json())
-      .then(scores => {
-        console.log('Raw scores from backend:', scores);
-        const formattedScores = scores.map(score => {
-          return {
-            gameId: score.game_id,
-            gameTitle: score.game_title,
-            thumbnail: score.thumbnail,
-            highScore: score.high_score
-          };
-        });
-        console.log('Formatted scores:', formattedScores); // testing scores in console
-        setBackendScores(formattedScores);
-      })
-      .catch(err => console.error('Error fetching scores:', err));
-  } else {
-    setBackendScores([]);
-  }
-}, [currentUser]);
+    if (currentUser) {
+      fetch(`http://localhost:3000/api/scores/${currentUser.username}`)
+        .then(res => res.json())
+        .then(scores => {
+          console.log('Raw scores from backend:', scores);
+          const formattedScores = scores.map(score => {
+            return {
+              gameId: score.game_id,
+              gameTitle: score.game_title,
+              thumbnail: score.thumbnail,
+              highScore: score.high_score
+            };
+          });
+          console.log('Formatted scores:', formattedScores);
+          setBackendScores(formattedScores);
+        })
+        .catch(err => console.error('Error fetching scores:', err));
+    } else {
+      setBackendScores([]);
+    }
+  }, [currentUser]);
 
   // Dummy user accounts
   const users = [
@@ -86,7 +86,7 @@ export default function Profile({ currentUser, setCurrentUser, games, darkMode }
     setCurrentUser(null);
   };
 
-  // Calculate user's high scores for each game (from backend in future)
+  // Calculate user's high scores for each game
   const getUserHighScores = () => {
     if (backendScores.length > 0) {
       return backendScores;

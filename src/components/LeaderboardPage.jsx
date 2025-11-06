@@ -6,29 +6,14 @@ export default function LeaderboardPage({ currentUser, darkMode }) {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const userAvatars = {
-    user1: "https://images.unsplash.com/photo-1518495973542-4542c06a5843?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=687",
-    user2: "https://images.unsplash.com/photo-1760681557681-457694845c7d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDN8SnBnNktpZGwtSGt8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=60&w=500",
-    user3: "https://images.unsplash.com/photo-1760517340115-7019ac6f3666?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDU1fEpwZzZLaWRsLUhrfHxlbnwwfHx8fHw%3D&auto=format&fit=crop&q=60&w=500"
-  };
-
-  // Fetch leaderboard data when game changes
+  // Fetch leaderboard data 
   useEffect(() => {
     setLoading(true);
     fetch(`http://localhost:3000/api/leaderboard/${selectedGame}`)
       .then((res) => res.json())
       .then((data) => {
         console.log('Leaderboard data from backend:', data);
-        
-        // Enrich backend data with avatars
-        const enriched = data.map((player) => ({
-          id: player.name,           // Username as ID
-          name: player.name,          // Username as display name
-          score: player.score,        // Score from backend
-          avatar: userAvatars[player.name] || null // Match to hardcoded avatars
-        }));
-        
-        setPlayers(enriched);
+        setPlayers(data);
       })
       .catch((error) => {
         console.error('Error fetching leaderboard:', error);
@@ -71,8 +56,8 @@ export default function LeaderboardPage({ currentUser, darkMode }) {
         </div>
       ) : (
         <Leaderboard
-          players={players}              // Pass enriched data directly
-          currentUserId={currentUser?.username}  // Highlight current user
+          players={players}              
+          currentUserId={currentUser?.username}
           limit={10}
           onSelect={(player) => {
             console.log('Selected player:', player);
