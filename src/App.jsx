@@ -6,11 +6,13 @@ import Achievements from "./components/Achievements";
 import GameModal from "./components/GameModal";
 import Settings from "./components/Settings";
 import Profile from "./components/Profile";
+import LeaderboardPage from "./components/LeaderboardPage";
 
 
 export default function App() {
 
   const [currentUser, setCurrentUser] = useState(null); // logged in user state
+  const [selectedLeaderboardGame, setSelectedLeaderboardGame] = useState(1); // which games leaderboard
   
   const [games, setGames] = useState([
     {
@@ -146,6 +148,13 @@ export default function App() {
             setSoundEffects={setSoundEffects}
             language={language}
             setLanguage={setLanguage}
+          />
+        )}
+
+        {selectedTab === "Leaderboard" && (
+          <LeaderboardPage
+          currentUser={currentUser}
+          darkMode={darkMode}
           />
         )}
       </main>
