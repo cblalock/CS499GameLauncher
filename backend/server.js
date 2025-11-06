@@ -5,7 +5,6 @@ const sqlite3 = require('sqlite3').verbose();
 const app = express();
 const PORT = 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
@@ -22,6 +21,16 @@ const db = new sqlite3.Database('./launcher.db', (err) => {
 // Create tables
 function initializeDatabase() {
   db.serialize(() => {
+    // Users table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS users (
+        username TEXT PRIMARY KEY,
+        email TEXT,
+        blazer_id TEXT,
+        profile_picture TEXT
+      )
+    `);
+
     // Games table
     db.run(`
       CREATE TABLE IF NOT EXISTS games (
@@ -42,7 +51,8 @@ function initializeDatabase() {
         game_id INTEGER,
         score INTEGER NOT NULL,
         achieved_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (game_id) REFERENCES games(id)
+        FOREIGN KEY (game_id) REFERENCES games(id),
+        FOREIGN KEY (username) REFERENCES users(username)
       )
     `);
 
@@ -51,12 +61,20 @@ function initializeDatabase() {
   });
 }
 
-// Seed database with your games
+// Seed database
 function seedDatabase() {
   db.get('SELECT COUNT(*) as count FROM games', (err, row) => {
     if (row.count === 0) {
       console.log('Seeding database with games...');
       
+      // Seed users
+      db.run(`INSERT OR IGNORE INTO users (username, email, blazer_id, profile_picture) VALUES 
+        ('user1', 'user1@uab.edu', 'user1', 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=687'),
+        ('user2', 'user2@uab.edu', 'user2', 'https://images.unsplash.com/photo-1760681557681-457694845c7d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDN8SnBnNktpZGwtSGt8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=60&w=500'),
+        ('user3', 'user3@uab.edu', 'user3', 'https://images.unsplash.com/photo-1760517340115-7019ac6f3666?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDU1fEpwZzZLaWRsLUhrfHxlbnwwfHx8fHw%3D&auto=format&fit=crop&q=60&w=500')
+      `);
+      
+      // Seed games
       db.run(`INSERT INTO games (id, title, description, thumbnail, download_url, play_in_browser) VALUES 
         (1, 'Glycolysim', 'tetris or something with molecules', 
          'https://images.unsplash.com/photo-1576086639808-ddfd21aa668c?q=80&w=880&auto=format&fit=crop', 
@@ -66,7 +84,7 @@ function seedDatabase() {
          '/games/ImmunoHeroes.zip', 0)
       `);
 
-      // Seed some test scores
+      // Seed test scores
       db.run(`INSERT INTO scores (username, game_id, score) VALUES 
         ('user1', 1, 350),
         ('user1', 2, 500),
@@ -82,7 +100,7 @@ function seedDatabase() {
 
 // ==================== API ROUTES ====================
 
-// Get all games (for your existing games list)
+// Get all games
 app.get('/api/games', (req, res) => {
   db.all('SELECT * FROM games', (err, games) => {
     if (err) {
@@ -92,10 +110,19 @@ app.get('/api/games', (req, res) => {
   });
 });
 
-// Get user's scores (by username, not ID)
+// Get users
+app.get('/api/users', (req, res) => {
+  db.all('SELECT username, email, blazer_id, profile_picture FROM users', (err, users) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(users);
+  });
+});
+
+// Get user's scores
 app.get('/api/scores/:username', (req, res) => {
   const { username } = req.params;
-
   db.all(
     `SELECT g.id as game_id, g.title as game_title, g.thumbnail, MAX(s.score) as high_score
      FROM scores s
@@ -137,21 +164,28 @@ app.post('/api/scores', (req, res) => {
 });
 // leaderboard
 app.get('/api/leaderboard/:gameId', (req, res) => {
-  const {gameId} = req.params;
+  const { gameId } = req.params;
   const limit = req.query.limit || 100;
 
   db.all(
-    `SELECT username as name, username as id, MAX(score) as score
-     FROM scores
-     WHERE game_id = ?
-     GROUP BY username
+    `SELECT 
+       s.username as name,
+       s.username as id,
+       MAX(s.score) as score,
+       u.profile_picture as avatar
+     FROM scores s
+     LEFT JOIN users u ON s.username = u.username
+     WHERE s.game_id = ?
+     GROUP BY s.username
      ORDER BY score DESC
      LIMIT ?`,
     [gameId, limit],
     (err, leaderboard) => {
-      if(err){
-        return res.status(500).json({error: 'Database error'});
+      if (err) {
+        console.error('Leaderboard query error:', err);
+        return res.status(500).json({ error: 'Database error' });
       }
+      console.log('Leaderboard data:', leaderboard);
       res.json(leaderboard);
     }
   );
