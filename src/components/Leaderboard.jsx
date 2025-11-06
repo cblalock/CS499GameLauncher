@@ -43,13 +43,7 @@ export default function Leaderboard({
         return out.slice(0, limit);
     }, [players, q, sort, limit]);
 
-    const defaults = [
-        { id: "p1", name: "Ava", score: 9800, progress: 0.92 },
-        { id: "p2", name: "Kai", score: 8600, progress: 0.77 },
-        { id: "p3", name: "Maya", score: 7400, progress: 0.63 },
-    ];
-    const rows = visible.length ? visible : defaults;
-
+    const rows = visible;
     const toggle = (k) => setSort((s) => (s.key === k ? { key: k, desc: !s.desc } : { key: k, desc: true }));
 
     return (
@@ -70,8 +64,7 @@ export default function Leaderboard({
                 .lb-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
                 .lb-meta{font-size:12px;color:var(--lb-muted);margin-top:3px}
                 .lb-score{min-width:72px;text-align:right;font-weight:700;color:var(--lb-accent)}
-                .lb-bar{height:6px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden;margin-top:6px}
-                .lb-bar>i{display:block;height:100%;background:linear-gradient(90deg,rgba(110,231,183,0.9),rgba(98,167,255,0.9))}
+                .lb-empty{text-align:center;padding:24px;color:var(--lb-muted);font-size:13px}
                 .rank-medal-1{color:#ffdf7e;background:linear-gradient(90deg,#ffd56a,#ff9f6b)}
                 .rank-medal-2{color:#e6f2ff;background:linear-gradient(90deg,#c9dfff,#94b6ff)}
                 .rank-medal-3{color:#f3e4ff;background:linear-gradient(90deg,#e3c9ff,#caa8ff)}
@@ -91,15 +84,17 @@ export default function Leaderboard({
                 <div style={{ fontSize: 13, color: "var(--lb-muted)" }}>Loading…</div>
             ) : error ? (
                 <div style={{ fontSize: 13, color: "salmon" }}>Error: {error}</div>
+            ) : rows.length === 0 ? (
+                <div className="lb-empty">
+                    {q ? `No players found matching "${q}"` : 'No scores yet'}
+                </div>
             ) : (
                 <div className="lb-list" role="list">
                     {rows.map((p, i) => {
                         const rank = i + 1;
                         const isCurrent = currentUserId != null && p.id === currentUserId;
                         const medal = rank <= 3 ? `rank-medal-${rank}` : "";
-                        const base = rows[0]?.score || 1;
-                        const prog = "progress" in p ? p.progress : (p.score ?? 0) / base;
-                        const percent = Math.max(0, Math.min(100, Math.round((prog ?? 0) * 100)));
+                        
                         return (
                             <div key={p.id ?? `${p.name}-${i}`} role="listitem" className={`lb-row ${isCurrent ? "is-current" : ""}`} onClick={() => onSelect && onSelect(p)}>
                                 <div className={`lb-rank ${medal}`} title={`#${rank}`}>{rank <= 3 ? "★" : `#${rank}`}</div>
@@ -109,8 +104,7 @@ export default function Leaderboard({
                                 <div className="lb-info">
                                     <div className="lb-name">{p.name ?? "Unknown"}</div>
                                     <div className="lb-meta">
-                                        Score: {p.score ?? 0} · {percent}% complete
-                                        <div className="lb-bar" aria-hidden><i style={{ width: `${percent}%` }} /></div>
+                                        Score: {p.score ?? 0}
                                     </div>
                                 </div>
                                 <div className="lb-score">{p.score ?? 0}</div>
