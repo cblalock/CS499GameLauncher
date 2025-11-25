@@ -1,6 +1,13 @@
 import { Clock, Download, Trophy } from "lucide-react";
 
-export default function Games({ games, setSelectedGame, handleLaunch, darkMode }) {
+export default function Games({ games, setSelectedGame, handleLaunch, darkMode, thumbnailSize }) {
+  // Map thumbnailSize setting to height classes
+  const thumbnailHeightClass = {
+    small: "h-32",
+    medium: "h-48", // default
+    large: "h-64",
+  };
+
   return (
     <section>
       <h2 className={`text-2xl font-bold mb-6 ${darkMode ? "text-white" : "text-white"}`}>Biology Games</h2>
@@ -16,7 +23,11 @@ export default function Games({ games, setSelectedGame, handleLaunch, darkMode }
             onClick={() => setSelectedGame(game)}
           >
             <div className="relative">
-              <img src={game.thumbnail} alt={game.title} className="w-full h-48 object-cover" />
+              <img
+                src={game.thumbnail}
+                alt={game.title}
+                className={`w-full object-cover ${thumbnailHeightClass[thumbnailSize] || "h-48"}`}
+              />
               <div className={`absolute top-2 right-2 rounded-full px-3 py-1 flex items-center gap-1 ${
                 darkMode ? "bg-gray-600" : "bg-black bg-opacity-70"
               }`}>

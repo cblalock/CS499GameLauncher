@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 export default function Settings({
   darkMode,
   setDarkMode,
@@ -17,48 +15,42 @@ export default function Settings({
   setLanguage,
 }) {
   return (
-    <section className="max-w-3xl mx-auto p-4 bg-white bg-opacity-10 rounded-lg border border-gray-400">
-      <h2 className="text-2xl font-bold mb-6 text-white">Settings</h2>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold mb-4">Settings</h2>
 
-      {/* Dark Mode Switch */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-white font-semibold">Dark Mode</span>
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            className="sr-only"
-            checked={darkMode}
-            onChange={(e) => setDarkMode(e.target.checked)}
-          />
-          <div className={`w-12 h-6 bg-gray-300 rounded-full shadow-inner transition ${darkMode ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
-          <div
-            className={`dot absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow transform transition ${
-              darkMode ? 'translate-x-6' : ''
-            }`}
-          ></div>
-        </label>
+      {/* Dark Mode */}
+      <div className="flex items-center justify-between">
+        <span>Dark Mode</span>
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          className={`px-4 py-2 rounded-lg ${
+            darkMode ? "bg-yellow-500 text-black" : "bg-gray-700 text-white"
+          }`}
+        >
+          {darkMode ? "On" : "Off"}
+        </button>
       </div>
 
       {/* Sidebar Position */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-white font-semibold">Sidebar Position</span>
+      <div className="flex items-center justify-between">
+        <span>Sidebar Position</span>
         <select
           value={sidebarPosition}
           onChange={(e) => setSidebarPosition(e.target.value)}
-          className="bg-gray-700 text-white p-2 rounded"
+          className="px-3 py-2 border rounded-lg bg-gray-800 text-white"
         >
           <option value="left">Left</option>
           <option value="right">Right</option>
         </select>
       </div>
 
-      {/* Game Thumbnail Size */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-white font-semibold">Game Thumbnail Size</span>
+      {/* Thumbnail Size */}
+      <div className="flex items-center justify-between">
+        <span>Thumbnail Size</span>
         <select
           value={thumbnailSize}
           onChange={(e) => setThumbnailSize(e.target.value)}
-          className="bg-gray-700 text-white p-2 rounded"
+          className="px-3 py-2 border rounded-lg bg-gray-800 text-white"
         >
           <option value="small">Small</option>
           <option value="medium">Medium</option>
@@ -67,70 +59,59 @@ export default function Settings({
       </div>
 
       {/* Default Tab */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-white font-semibold">Default Tab</span>
+      <div className="flex items-center justify-between">
+        <span>Default Tab</span>
         <select
           value={defaultTab}
           onChange={(e) => setDefaultTab(e.target.value)}
-          className="bg-gray-700 text-white p-2 rounded"
+          className="px-3 py-2 border rounded-lg bg-gray-800 text-white"
         >
           <option value="Games">Games</option>
           <option value="Achievements">Achievements</option>
+          <option value="Profile">Profile</option>
           <option value="Settings">Settings</option>
         </select>
       </div>
 
       {/* Notifications */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-white font-semibold">Notifications</span>
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            className="sr-only"
-            checked={notifications}
-            onChange={(e) => setNotifications(e.target.checked)}
-          />
-          <div className={`w-12 h-6 bg-gray-300 rounded-full shadow-inner transition ${notifications ? 'bg-green-600' : 'bg-gray-300'}`}></div>
-          <div
-            className={`dot absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow transform transition ${
-              notifications ? 'translate-x-6' : ''
-            }`}
-          ></div>
-        </label>
+      <div className="flex items-center justify-between">
+        <span>Notifications</span>
+        <button
+          onClick={() => setNotifications(!notifications)}
+          className={`px-4 py-2 rounded-lg ${
+            notifications ? "bg-yellow-500 text-black" : "bg-gray-700 text-white"
+          }`}
+        >
+          {notifications ? "On" : "Off"}
+        </button>
       </div>
 
       {/* Sound Effects */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-white font-semibold">Sound Effects</span>
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            className="sr-only"
-            checked={soundEffects}
-            onChange={(e) => setSoundEffects(e.target.checked)}
-          />
-          <div className={`w-12 h-6 bg-gray-300 rounded-full shadow-inner transition ${soundEffects ? 'bg-green-600' : 'bg-gray-300'}`}></div>
-          <div
-            className={`dot absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow transform transition ${
-              soundEffects ? 'translate-x-6' : ''
-            }`}
-          ></div>
-        </label>
+      <div className="flex items-center justify-between">
+        <span>Sound Effects</span>
+        <button
+          onClick={() => setSoundEffects(!soundEffects)}
+          className={`px-4 py-2 rounded-lg ${
+            soundEffects ? "bg-yellow-500 text-black" : "bg-gray-700 text-white"
+          }`}
+        >
+          {soundEffects ? "On" : "Off"}
+        </button>
       </div>
 
       {/* Language */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-white font-semibold">Language</span>
+      <div className="flex items-center justify-between">
+        <span>Language</span>
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
-          className="bg-gray-700 text-white p-2 rounded"
+          className="px-3 py-2 border rounded-lg bg-gray-800 text-white"
         >
           <option value="en">English</option>
           <option value="es">Spanish</option>
-          {/* Add more languages later */}
+          <option value="fr">French</option>
         </select>
       </div>
-    </section>
+    </div>
   );
 }
