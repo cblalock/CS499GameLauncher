@@ -2,12 +2,38 @@ import { useState, useEffect } from "react";
 import Leaderboard from "./Leaderboard";
 
 export default function LeaderboardPage({ currentUser, darkMode }) {
-  const [selectedGame, setSelectedGame] = useState(1); // Default to game 1
+  const [selectedGame, setSelectedGame] = useState(null); // Start with null until games load
+  const [games, setGames] = useState([]);
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [gamesLoading, setGamesLoading] = useState(true);
 
-  // Fetch leaderboard data 
+  // Fetch games list on mount
   useEffect(() => {
+    setGamesLoading(true);
+    fetch('http://localhost:3000/api/games')
+      .then((res) => res.json())
+      .then((data) => {
+        console.log('Games data from backend:', data);
+        setGames(data);
+        // Set first game as default
+        if (data.length > 0) {
+          setSelectedGame(data[0].id);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching games:', error);
+        setGames([]);
+      })
+      .finally(() => {
+        setGamesLoading(false);
+      });
+  }, []);
+
+  // Fetch leaderboard data when selectedGame changes
+  useEffect(() => {
+    if (selectedGame === null) return; // Don't fetch if no game selected yet
+    
     setLoading(true);
     fetch(`http://localhost:3000/api/leaderboard/${selectedGame}`)
       .then((res) => res.json())
@@ -35,18 +61,31 @@ export default function LeaderboardPage({ currentUser, darkMode }) {
         <label className={`block mb-2 font-semibold ${darkMode ? 'text-white' : 'text-white'}`}>
           Select Game:
         </label>
-        <select
-          value={selectedGame}
-          onChange={(e) => setSelectedGame(Number(e.target.value))}
-          className={`p-3 rounded-lg border ${
-            darkMode 
-              ? 'bg-gray-700 text-white border-gray-600' 
-              : 'bg-white text-gray-900 border-gray-300'
-          }`}
-        >
-          <option value={1}>Glycolysim</option>
-          <option value={2}>ImmunoHeroes</option>
-        </select>
+        {gamesLoading ? (
+          <div className={`p-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            Loading games...
+          </div>
+        ) : games.length === 0 ? (
+          <div className={`p-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            No games available
+          </div>
+        ) : (
+          <select
+            value={selectedGame || ''}
+            onChange={(e) => setSelectedGame(Number(e.target.value))}
+            className={`p-3 rounded-lg border w-half ${
+              darkMode 
+                ? 'bg-gray-700 text-white border-gray-600' 
+                : 'bg-white text-gray-900 border-gray-300'
+            }`}
+          >
+            {games.map((game) => (
+              <option key={game.id} value={game.id}>
+                {game.title}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Leaderboard Component */}

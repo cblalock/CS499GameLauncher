@@ -63,7 +63,7 @@ export default function Leaderboard({
                 .lb-info{flex:1;min-width:0}
                 .lb-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
                 .lb-meta{font-size:12px;color:var(--lb-muted);margin-top:3px}
-                .lb-score{min-width:72px;text-align:right;font-weight:700;color:var(--lb-accent)}
+                .lb-score{min-width:72px;text-align:right;font-weight:700;color:var(--lb-muted)}
                 .lb-empty{text-align:center;padding:24px;color:var(--lb-muted);font-size:13px}
                 .rank-medal-1{color:#ffdf7e;background:linear-gradient(90deg,#ffd56a,#ff9f6b)}
                 .rank-medal-2{color:#e6f2ff;background:linear-gradient(90deg,#c9dfff,#94b6ff)}
@@ -103,9 +103,7 @@ export default function Leaderboard({
                                 </div>
                                 <div className="lb-info">
                                     <div className="lb-name">{p.name ?? "Unknown"}</div>
-                                    <div className="lb-meta">
-                                        Score: {p.score ?? 0}
-                                    </div>
+                                    
                                 </div>
                                 <div className="lb-score">{p.score ?? 0}</div>
                             </div>

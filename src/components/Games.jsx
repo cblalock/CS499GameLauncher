@@ -31,20 +31,12 @@ export default function Games({ games, setSelectedGame, handleLaunch, darkMode, 
               <div className={`absolute top-2 right-2 rounded-full px-3 py-1 flex items-center gap-1 ${
                 darkMode ? "bg-gray-600" : "bg-black bg-opacity-70"
               }`}>
-                <Trophy className={`w-4 h-4 ${darkMode ? "text-white" : "text-yellow-400"}`} />
-                <span className={`text-sm font-semibold ${darkMode ? "text-white" : "text-white"}`}>
-                  {game.score}
-                </span>
               </div>
             </div>
             <div className="p-4">
               <h3 className={`text-xl font-bold mb-2 ${darkMode ? "text-white" : "text-white"}`}>{game.title}</h3>
               <p className={`text-sm mb-4 ${darkMode ? "text-gray-300" : "text-white"}`}>{game.description}</p>
               <div className="flex items-center justify-between">
-                <div className={`flex items-center gap-2 text-xs ${darkMode ? "text-gray-400" : "text-gray-400"}`}>
-                  <Clock className="w-4 h-4" />
-                  <span>{game.lastPlayed}</span>
-                </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleLaunch(game); }}
                   className={`px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition-all ${
