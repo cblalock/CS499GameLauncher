@@ -7,40 +7,79 @@ import GameModal from "./components/GameModal";
 import Settings from "./components/Settings";
 import Profile from "./components/Profile";
 import LeaderboardPage from "./components/LeaderboardPage";
+import themes from "./components/Themes";
 
 const API_BASE_URL = "http://localhost:3000/api";
 
 export default function App() {
+  // -----------------------------
+  // ✅ LOCALSTORAGE SETTINGS
+  // -----------------------------
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      try {
+        return JSON.parse(savedTheme);
+      } catch {
+        return themes[0];
+      }
+    }
+    return themes[0];
+  });
 
-  // -----------------------------
-  // ✅ LOCALSTORAGE SETTINGS (your code)
-  // -----------------------------
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("darkMode") === "true");
-  const [sidebarPosition, setSidebarPosition] = useState(() => localStorage.getItem("sidebarPosition") || "left");
-  const [thumbnailSize, setThumbnailSize] = useState(() => localStorage.getItem("thumbnailSize") || "medium");
-  const [defaultTab, setDefaultTab] = useState(() => localStorage.getItem("defaultTab") || "Games");
-  const [notifications, setNotifications] = useState(() => localStorage.getItem("notifications") === "true");
-  const [soundEffects, setSoundEffects] = useState(() => localStorage.getItem("soundEffects") === "true");
-  const [language, setLanguage] = useState(() => localStorage.getItem("language") || "en");
+  const [sidebarPosition, setSidebarPosition] = useState(
+    () => localStorage.getItem("sidebarPosition") || "left"
+  );
+
+  const [thumbnailSize, setThumbnailSize] = useState(
+    () => localStorage.getItem("thumbnailSize") || "medium"
+  );
+
+  const [defaultTab, setDefaultTab] = useState(
+    () => localStorage.getItem("defaultTab") || "Games"
+  );
+
+  const [notifications, setNotifications] = useState(
+    () => localStorage.getItem("notifications") === "true"
+  );
+
+  const [soundEffects, setSoundEffects] = useState(
+    () => localStorage.getItem("soundEffects") === "true"
+  );
+
+  // ⭐ NEW: FONT SIZE
+  const [fontSize, setFontSize] = useState(
+    () => localStorage.getItem("fontSize") || "default"
+  );
 
   useEffect(() => {
-    localStorage.setItem("darkMode", darkMode);
+    localStorage.setItem("theme", JSON.stringify(theme));
     localStorage.setItem("sidebarPosition", sidebarPosition);
     localStorage.setItem("thumbnailSize", thumbnailSize);
     localStorage.setItem("defaultTab", defaultTab);
     localStorage.setItem("notifications", notifications);
     localStorage.setItem("soundEffects", soundEffects);
-    localStorage.setItem("language", language);
-  }, [darkMode, sidebarPosition, thumbnailSize, defaultTab, notifications, soundEffects, language]);
+
+    // ⭐ Save font size
+    localStorage.setItem("fontSize", fontSize);
+  }, [
+    theme,
+    sidebarPosition,
+    thumbnailSize,
+    defaultTab,
+    notifications,
+    soundEffects,
+    fontSize,
+  ]);
 
   // -----------------------------
-  // ✅ USER + LEADERBOARD STATES (groupmate)
+  // USER + LEADERBOARD STATES
   // -----------------------------
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedLeaderboardGame, setSelectedLeaderboardGame] = useState(1);
 
   // -----------------------------
-  // ✅ GAMES FETCHED FROM BACKEND (groupmate)
+  // FETCH GAMES FROM BACKEND
   // -----------------------------
   const [games, setGames] = useState([]);
   const [gamesLoading, setGamesLoading] = useState(true);
@@ -63,7 +102,7 @@ export default function App() {
   const [activeGame, setActiveGame] = useState(null);
 
   // -----------------------------
-  // ✅ LOAD ACHIEVEMENTS (your code)
+  // LOAD ACHIEVEMENTS PER GAME
   // -----------------------------
   useEffect(() => {
     if (selectedTab === "Achievements" && activeGame) {
@@ -78,7 +117,7 @@ export default function App() {
   }, [selectedTab, activeGame]);
 
   // -----------------------------
-  // Launch game download
+  // LAUNCH GAME FILE
   // -----------------------------
   const handleLaunch = (game) => {
     const link = document.createElement("a");
@@ -90,16 +129,25 @@ export default function App() {
   };
 
   // -----------------------------
-  // RENDER
+  // FONT SIZE CLASS
+  // -----------------------------
+  const fontClass =
+    fontSize === "small"
+      ? "text-sm"
+      : fontSize === "large"
+      ? "text-lg"
+      : fontSize === "xl"
+      ? "text-xl"
+      : "text-base";
+
+  // -----------------------------
+  // RENDER UI
   // -----------------------------
   return (
     <div
-      className={`min-h-screen w-full flex ${
-        darkMode
-          ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700"
-          : "bg-gradient-to-br from-green-800 via-gray-300 to-yellow-400"
-      }`}
+      className={`min-h-screen w-full flex transition-colors duration-300 ${theme.background} ${fontClass}`}
     >
+      {/* Sidebar */}
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -107,32 +155,37 @@ export default function App() {
         setSelectedTab={setSelectedTab}
         games={games}
         setActiveGame={setActiveGame}
-        darkMode={darkMode}
+        theme={theme}
         sidebarPosition={sidebarPosition}
+        fontSize={fontSize}
       />
 
+      {/* Main Content */}
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          sidebarOpen ? "ml-80" : "ml-0"
-        }`}
+        className="flex-1 flex flex-col transition-all duration-300"
+        style={{
+          marginLeft: sidebarOpen && sidebarPosition === "left" ? "320px" : 0,
+          marginRight: sidebarOpen && sidebarPosition === "right" ? "320px" : 0,
+        }}
       >
         <Header
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
-          darkMode={darkMode}
+          theme={theme}
           sidebarPosition={sidebarPosition}
+          fontSize={fontSize}
         />
 
         <main className="flex-1 p-6">
-
           {selectedTab === "Games" && (
             <Games
               games={games}
               gamesLoading={gamesLoading}
               setSelectedGame={setSelectedGame}
               handleLaunch={handleLaunch}
-              darkMode={darkMode}
+              theme={theme}
               thumbnailSize={thumbnailSize}
+              fontSize={fontSize}
             />
           )}
 
@@ -142,7 +195,8 @@ export default function App() {
               activeGame={activeGame}
               setActiveGame={setActiveGame}
               games={games}
-              darkMode={darkMode}
+              theme={theme}
+              fontSize={fontSize}
             />
           )}
 
@@ -151,14 +205,15 @@ export default function App() {
               currentUser={currentUser}
               setCurrentUser={setCurrentUser}
               games={games}
-              darkMode={darkMode}
+              theme={theme}
+              fontSize={fontSize}
             />
           )}
 
           {selectedTab === "Settings" && (
             <Settings
-              darkMode={darkMode}
-              setDarkMode={setDarkMode}
+              theme={theme}
+              setTheme={setTheme}
               sidebarPosition={sidebarPosition}
               setSidebarPosition={setSidebarPosition}
               thumbnailSize={thumbnailSize}
@@ -169,27 +224,29 @@ export default function App() {
               setNotifications={setNotifications}
               soundEffects={soundEffects}
               setSoundEffects={setSoundEffects}
-              language={language}
-              setLanguage={setLanguage}
+              fontSize={fontSize}
+              setFontSize={setFontSize}
             />
           )}
 
           {selectedTab === "Leaderboard" && (
             <LeaderboardPage
               currentUser={currentUser}
-              darkMode={darkMode}
+              theme={theme}
+              fontSize={fontSize}
             />
           )}
-
         </main>
       </div>
 
+      {/* Game Modal */}
       {selectedGame && (
         <GameModal
           selectedGame={selectedGame}
           handleLaunch={handleLaunch}
           onClose={() => setSelectedGame(null)}
-          darkMode={darkMode}
+          theme={theme}
+          fontSize={fontSize}
         />
       )}
     </div>
