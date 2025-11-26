@@ -13,3 +13,40 @@ body, html {
   width: 100%;
   height: 100%;
 }
+
+/* Fire and glow animations */
+@keyframes glow-pulse {
+  0%, 100% { 
+    filter: drop-shadow(0 0 8px rgba(251, 146, 60, 0.8)) drop-shadow(0 0 16px rgba(234, 88, 12, 0.6));
+  }
+  50% { 
+    filter: drop-shadow(0 0 20px rgba(251, 146, 60, 1)) drop-shadow(0 0 30px rgba(234, 88, 12, 0.8));
+  }
+}
+
+@keyframes fire-flicker {
+  0%, 100% { 
+    opacity: 1;
+    filter: brightness(1);
+  }
+  25% { 
+    opacity: 0.9;
+    filter: brightness(1.1);
+  }
+  50% { 
+    opacity: 0.85;
+    filter: brightness(1.2);
+  }
+  75% { 
+    opacity: 0.95;
+    filter: brightness(1.05);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-fire-flicker {
+  animation: fire-flicker 1.5s ease-in-out infinite;
+}
