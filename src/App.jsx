@@ -19,12 +19,15 @@ export default function App() {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
       try {
-        return JSON.parse(savedTheme);
+        const parsed = JSON.parse(savedTheme);
+        // Validate essential keys
+        if (!parsed.background || !parsed.text) return themes[Object.keys(themes)[0]];
+        return parsed;
       } catch {
-        return themes[0];
+        return themes[Object.keys(themes)[0]];
       }
     }
-    return themes[0];
+    return themes[Object.keys(themes)[0]];
   });
 
   const [sidebarPosition, setSidebarPosition] = useState(
@@ -47,7 +50,6 @@ export default function App() {
     () => localStorage.getItem("soundEffects") === "true"
   );
 
-  // ⭐ NEW: FONT SIZE
   const [fontSize, setFontSize] = useState(
     () => localStorage.getItem("fontSize") || "default"
   );
@@ -59,8 +61,6 @@ export default function App() {
     localStorage.setItem("defaultTab", defaultTab);
     localStorage.setItem("notifications", notifications);
     localStorage.setItem("soundEffects", soundEffects);
-
-    // ⭐ Save font size
     localStorage.setItem("fontSize", fontSize);
   }, [
     theme,
@@ -157,7 +157,6 @@ export default function App() {
         setActiveGame={setActiveGame}
         theme={theme}
         sidebarPosition={sidebarPosition}
-        fontSize={fontSize}
       />
 
       {/* Main Content */}
@@ -173,7 +172,6 @@ export default function App() {
           setSidebarOpen={setSidebarOpen}
           theme={theme}
           sidebarPosition={sidebarPosition}
-          fontSize={fontSize}
         />
 
         <main className="flex-1 p-6">
@@ -185,7 +183,6 @@ export default function App() {
               handleLaunch={handleLaunch}
               theme={theme}
               thumbnailSize={thumbnailSize}
-              fontSize={fontSize}
             />
           )}
 
@@ -196,7 +193,6 @@ export default function App() {
               setActiveGame={setActiveGame}
               games={games}
               theme={theme}
-              fontSize={fontSize}
             />
           )}
 
@@ -206,7 +202,6 @@ export default function App() {
               setCurrentUser={setCurrentUser}
               games={games}
               theme={theme}
-              fontSize={fontSize}
             />
           )}
 
@@ -233,7 +228,6 @@ export default function App() {
             <LeaderboardPage
               currentUser={currentUser}
               theme={theme}
-              fontSize={fontSize}
             />
           )}
         </main>
@@ -246,10 +240,8 @@ export default function App() {
           handleLaunch={handleLaunch}
           onClose={() => setSelectedGame(null)}
           theme={theme}
-          fontSize={fontSize}
         />
       )}
     </div>
   );
 }
-
