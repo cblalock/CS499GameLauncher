@@ -4,7 +4,7 @@ export default function Leaderboard({
     players: playersProp,
     fetchUrl,
     currentUserId,
-    limit = 10,
+    limit = 100,
     onSelect,
     className = "",
 }) {

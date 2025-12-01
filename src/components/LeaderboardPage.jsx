@@ -97,7 +97,7 @@ export default function LeaderboardPage({ currentUser, darkMode }) {
         <Leaderboard
           players={players}              
           currentUserId={currentUser?.username}
-          limit={10}
+          limit={100}
           onSelect={(player) => {
             console.log('Selected player:', player);
           }}
