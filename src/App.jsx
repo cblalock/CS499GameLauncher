@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
+import Friends from "./components/friendspage";
 import Header from "./components/Header";
 import Games from "./components/Games";
 import Achievements from "./components/Achievements";
@@ -226,6 +227,13 @@ export default function App() {
 
           {selectedTab === "Leaderboard" && (
             <LeaderboardPage
+              currentUser={currentUser}
+              theme={theme}
+            />
+          )}
+
+          {selectedTab === "Friends" && (
+            <Friends
               currentUser={currentUser}
               theme={theme}
             />

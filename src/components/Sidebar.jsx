@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Gamepad2, Star, User, Trophy, Settings, X } from "lucide-react";
+import { Gamepad2, Star, User, Trophy, Settings, Users, X } from "lucide-react";
 
 export default function Sidebar({
   sidebarOpen,
@@ -10,9 +10,9 @@ export default function Sidebar({
   setActiveGame,
   darkMode
 }) {
-  const tabs = ["Games", "Achievements", "Profile", "Leaderboard", "Settings"];
+  // Updated tabs order: Friends comes after Profile
+  const tabs = ["Games", "Achievements", "Profile", "Friends", "Leaderboard", "Settings"];
 
-  // NEW: Controls the dropdown for Games
   const [gamesOpen, setGamesOpen] = useState(false);
 
   return (
@@ -28,17 +28,13 @@ export default function Sidebar({
       <div className="p-6">
         <div className="flex justify-between items-center mb-8">
           <h2
-            className={`text-2xl font-bold ${
-              darkMode ? "text-white" : "text-yellow-400"
-            }`}
+            className={`text-2xl font-bold ${darkMode ? "text-white" : "text-yellow-400"}`}
           >
             Menu
           </h2>
           <button
             onClick={() => setSidebarOpen(false)}
-            className={`hover:text-yellow-400 ${
-              darkMode ? "text-white" : "text-white"
-            }`}
+            className={`hover:text-yellow-400 ${darkMode ? "text-white" : "text-white"}`}
           >
             <X className="w-6 h-6" />
           </button>
@@ -47,20 +43,20 @@ export default function Sidebar({
         <div className="space-y-4">
           {tabs.map((tab) => {
             const isGamesTab = tab === "Games";
+            const isFriendsTab = tab === "Friends";
 
             return (
               <div key={tab}>
-                {/* MAIN TAB BUTTON */}
                 <button
                   onClick={() => {
                     if (isGamesTab) {
-                      setGamesOpen((prev) => !prev); // toggle dropdown
+                      setGamesOpen((prev) => !prev);
                     } else {
                       setSelectedTab(tab);
                       if (tab === "Achievements") {
                         setActiveGame(games[0]?.title);
                       }
-                      setGamesOpen(false); // close dropdown when leaving Games
+                      setGamesOpen(false);
                     }
                   }}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
@@ -77,22 +73,17 @@ export default function Sidebar({
                     {isGamesTab && <Gamepad2 className="w-5 h-5" />}
                     {tab === "Achievements" && <Star className="w-5 h-5" />}
                     {tab === "Profile" && <User className="w-5 h-5" />}
+                    {isFriendsTab && <Users className="w-5 h-5" />}
                     {tab === "Leaderboard" && <Trophy className="w-5 h-5" />}
                     {tab === "Settings" && <Settings className="w-5 h-5" />}
                     <span>{tab}</span>
                   </div>
 
-                  {/* ▼ / ▲ dropdown arrow */}
-                  {isGamesTab && (
-                    <span className="text-sm">{gamesOpen ? "▲" : "▼"}</span>
-                  )}
+                  {isGamesTab && <span className="text-sm">{gamesOpen ? "▲" : "▼"}</span>}
                 </button>
 
-                {/* SUBMENU: Dropdown contents for Games */}
                 {isGamesTab && gamesOpen && (
                   <div className="ml-8 mt-2 space-y-2">
-
-                    {/* ✅ NEW: Biology Games button */}
                     <button
                       onClick={() => {
                         setActiveGame("Biology");
@@ -107,7 +98,6 @@ export default function Sidebar({
                       Biology Games
                     </button>
 
-                    {/* Existing dynamic game list */}
                     {games.map((game) => (
                       <button
                         key={game.title}
