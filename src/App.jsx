@@ -147,6 +147,7 @@ export default function App() {
   return (
     <div
       className={`min-h-screen w-full flex transition-colors duration-300 ${theme.background} ${fontClass}`}
+      style={{ flexDirection: sidebarPosition === 'right' ? 'row-reverse' : 'row' }}
     >
       {/* Sidebar */}
       <Sidebar
@@ -157,7 +158,7 @@ export default function App() {
         games={games}
         setActiveGame={setActiveGame}
         theme={theme}
-        sidebarPosition={sidebarPosition}
+        sidebarPosition={sidebarPosition} // Pass sidebarPosition to Sidebar
       />
 
       {/* Main Content */}

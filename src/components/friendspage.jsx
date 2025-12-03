@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:3000';
 
-export default function FriendsSystem() {
+export default function FriendsSystem({ currentUser }) {
   const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState([]);
   const [searchName, setSearchName] = useState("");
@@ -12,8 +12,8 @@ export default function FriendsSystem() {
   useEffect(() => {
     const fetchFriendsAndRequests = async () => {
       try {
-        const friendsRes = await axios.get(`${API_URL}/friends/${username}`);
-        const requestsRes = await axios.get(`${API_URL}/friends/requests/incoming/${username}`);
+        const friendsRes = await axios.get(`${API_URL}/friends/${currentUser}`);
+        const requestsRes = await axios.get(`${API_URL}/friends/requests/incoming/${currentUser}`);
         setFriends(friendsRes.data);
         setRequests(requestsRes.data);
       } catch (err) {
@@ -22,7 +22,7 @@ export default function FriendsSystem() {
     };
 
     fetchFriendsAndRequests();
-  }, []);
+  }, [currentUser]);
 
   const sendFriendRequest = async (username) => {
     try {
@@ -88,69 +88,84 @@ export default function FriendsSystem() {
     }
   };
 
-    return (
-      <div style={{ display: "flex", gap: "2rem", padding: "2rem", fontFamily: "sans-serif" }}>
-        {/* Friends List */}
-        <div style={{ flex: 1 }}>
-          <h2>Friends</h2>
-          <ul>
-            {friends.map((friend) => (
-              <li key={friend.id} style={{ marginBottom: "0.5rem" }}>
-                <span style={{ fontWeight: friend.online ? "bold" : "normal" }}>
-                  {friend.username}
-                </span>
-                <span style={{ marginLeft: "0.5rem", color: friend.online ? "green" : "gray" }}>
-                  ({friend.online ? "Online" : "Offline"})
-                </span>
-                <button onClick={() => removeFriend(friend.id)} style={{ marginLeft: "1rem" }}>
-                  Remove
-                </button>
+  // Update friends list whenever the current user changes
+  useEffect(() => {
+    const fetchFriends = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/friends/${currentUser}`);
+        const friendsList = response.data.map(friend => {
+          return friend.requester === currentUser ? friend.receiver : friend.requester;
+        });
+        setFriends(friendsList);
+      } catch (error) {
+        console.error('Error fetching friends:', error);
+      }
+    };
+
+    if (currentUser) {
+      fetchFriends();
+    }
+  }, [currentUser]);
+
+  return (
+    <div style={{ display: "flex", gap: "2rem", padding: "2rem", fontFamily: "sans-serif" }}>
+      {/* Friends List */}
+      <div style={{ flex: 1 }}>
+        <h2>Friends</h2>
+        <ul>
+          {friends.length === 0 ? (
+            <p>No friends yet.</p>
+          ) : (
+            friends.map((username, index) => (
+              <li key={index} style={{ marginBottom: '0.5rem' }}>
+                <span>{username}</span>
               </li>
-            ))}
-          </ul>
-        </div>
-  
-        {/* Friend Requests */}
-        <div style={{ flex: 1 }}>
-          <h2>Friend Requests</h2>
-          <ul>
-            {requests.map((request) => (
-              <li key={request.id} style={{ marginBottom: "0.5rem" }}>
-                {request.username}
-                <button onClick={() => acceptRequest(request.id)} style={{ marginLeft: "1rem" }}>
-                  Accept
-                </button>
-                <button onClick={() => declineRequest(request.id)} style={{ marginLeft: "0.5rem" }}>
-                  Decline
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-  
-        {/* Search */}
-        <div style={{ flex: 1 }}>
-          <h2>Search Users</h2>
-          <input
-            type="text"
-            value={searchName}
-            onChange={(e) => setSearchName(e.target.value)}
-            placeholder="Enter username"
-          />
-          <button onClick={handleSearch} style={{ marginLeft: "0.5rem" }}>
-            Search
-          </button>
-          <ul>
-            {searchResults.map((result) => (
-              <li key={result.id} style={{ marginBottom: "0.5rem" }}>
-                {result.username}
-                <button onClick={() => sendFriendRequest(result.username)} style={{ marginLeft: "1rem" }}>
-                  Send Request
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+            ))
+          )}
+        </ul>
       </div>
-    );
-  }
+
+      {/* Friend Requests */}
+      <div style={{ flex: 1 }}>
+        <h2>Friend Requests</h2>
+        <ul>
+          {requests.map((request) => (
+            <li key={request.id} style={{ marginBottom: "0.5rem" }}>
+              {request.username}
+              <button onClick={() => acceptRequest(request.id)} style={{ marginLeft: "1rem" }}>
+                Accept
+              </button>
+              <button onClick={() => declineRequest(request.id)} style={{ marginLeft: "0.5rem" }}>
+                Decline
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Search */}
+      <div style={{ flex: 1 }}>
+        <h2>Search Users</h2>
+        <input
+          type="text"
+          value={searchName}
+          onChange={(e) => setSearchName(e.target.value)}
+          placeholder="Enter username"
+        />
+        <button onClick={handleSearch} style={{ marginLeft: "0.5rem" }}>
+          Search
+        </button>
+        <ul>
+          {searchResults.map((result) => (
+            <li key={result.id} style={{ marginBottom: "0.5rem" }}>
+              {result.username}
+              <button onClick={() => sendFriendRequest(result.username)} style={{ marginLeft: "1rem" }}>
+                Send Request
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}

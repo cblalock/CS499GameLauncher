@@ -8,7 +8,8 @@ export default function Sidebar({
   setSelectedTab,
   games,
   setActiveGame,
-  darkMode
+  darkMode,
+  sidebarPosition // Added sidebarPosition prop
 }) {
   // Updated tabs order: Friends comes after Profile
   const tabs = ["Games", "Achievements", "Profile", "Friends", "Leaderboard", "Settings"];
@@ -17,7 +18,9 @@ export default function Sidebar({
 
   return (
     <div
-      className={`fixed top-0 left-0 h-full transition-all duration-300 z-50 overflow-hidden ${
+      className={`fixed top-0 ${
+        sidebarPosition === "right" ? "right-0" : "left-0"
+      } h-full transition-all duration-300 z-50 overflow-hidden ${
         sidebarOpen ? "w-80" : "w-0"
       } ${
         darkMode

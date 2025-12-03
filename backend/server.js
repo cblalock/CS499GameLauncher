@@ -77,6 +77,7 @@ function initializeDatabase() {
     console.log('Database tables initialized');
     seedDatabase();
     scanAddGames();
+    seedFriends();
   });
 }
 
@@ -98,6 +99,20 @@ function seedDatabase() {
         ('user2', 1, 600),
         ('user3', 1, 250)
       `);
+    }
+  });
+}
+
+// Seed hardcoded friends
+function seedFriends() {
+  db.run(`INSERT OR IGNORE INTO friends (requester, receiver, status) VALUES 
+    ('user1', 'user3', 'accepted'),
+    ('user2', 'user3', 'accepted')
+  `, (err) => {
+    if (err) {
+      console.error('Error seeding friends:', err);
+    } else {
+      console.log('Hardcoded friends seeded');
     }
   });
 }
