@@ -62,10 +62,30 @@ export default function FriendsSystem() {
     }
   };
 
-  const handleSearch = () => {
-    // Mock search
+  const checkUserExists = async (username) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/users/${username}`);
+      if (response.data && typeof response.data.exists === 'boolean') {
+        return response.data.exists;
+      } else {
+        console.error('Unexpected response format:', response.data);
+        return false;
+      }
+    } catch (err) {
+      console.error('Error checking user existence:', err);
+      return false;
+    }
+  };
+
+  const handleSearch = async () => {
     if (!searchName) return;
-    setSearchResults([{ id: 999, username: searchName }]);
+    const userExists = await checkUserExists(searchName);
+    if (userExists) {
+      setSearchResults([{ id: 999, username: searchName }]);
+    } else {
+      alert('User not found');
+      setSearchResults([]);
+    }
   };
 
     return (

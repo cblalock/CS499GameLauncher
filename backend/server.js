@@ -9,10 +9,10 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
-
 app.use('/games', express.static(path.join(__dirname, 'public/games')));
 
-// Initialize SQLite Database
+// ==================== DATABASE ====================
+
 const db = new sqlite3.Database('./launcher.db', (err) => {
   if (err) {
     console.error('Error opening database:', err);
@@ -22,7 +22,7 @@ const db = new sqlite3.Database('./launcher.db', (err) => {
   }
 });
 
-// Create tables
+// Initialize tables
 function initializeDatabase() {
   db.serialize(() => {
     // Users table
@@ -60,17 +60,17 @@ function initializeDatabase() {
       )
     `);
 
-    // ==== FRIENDS TABLE ====
+    // Friends table
     db.run(`
       CREATE TABLE IF NOT EXISTS friends (
-       id INTEGER PRIMARY KEY AUTOINCREMENT,
-       requester TEXT NOT NULL,
-       receiver TEXT NOT NULL,
-       status TEXT CHECK(status IN ('pending', 'accepted', 'declined')) DEFAULT 'pending',
-       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-       FOREIGN KEY (requester) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
-       FOREIGN KEY (receiver) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
-       CONSTRAINT unique_friendship UNIQUE(requester, receiver)
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        requester TEXT NOT NULL,
+        receiver TEXT NOT NULL,
+        status TEXT CHECK(status IN ('pending', 'accepted', 'declined')) DEFAULT 'pending',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (requester) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (receiver) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
+        CONSTRAINT unique_friendship UNIQUE(requester, receiver)
       )
     `);
 
@@ -80,16 +80,209 @@ function initializeDatabase() {
   });
 }
 
-// Seed database
+// Seed users and scores
 function seedDatabase() {
-  // Seed users
+  // Users
   db.run(`INSERT OR IGNORE INTO users (username, email, blazer_id, profile_picture) VALUES 
-    ('user1', 'user1@uab.edu', 'user1', 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?ixlib=rb-4.1.0&ixid=M3wxM
-`;
+    ('user1', 'user1@uab.edu', 'user1', 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&q=80&w=687'),
+    ('user2', 'user2@uab.edu', 'user2', 'https://images.unsplash.com/photo-1760681557681-457694845c7d?auto=format&fit=crop&q=60&w=500'),
+    ('user3', 'user3@uab.edu', 'user3', 'https://images.unsplash.com/photo-1760517340115-7019ac6f3666?auto=format&fit=crop&q=60&w=500')
+  `);
 
-// Add friends system endpoints
+  // Scores
+  db.get('SELECT COUNT(*) as count FROM scores', (err, row) => {
+    if (err) return console.error(err);
+    if (row.count === 0) {
+      db.run(`INSERT INTO scores (username, game_id, score) VALUES 
+        ('user1', 1, 350),
+        ('user2', 1, 600),
+        ('user3', 1, 250)
+      `);
+    }
+  });
+}
 
-// Get friends list
+// Scan public/games folder and add to database
+function scanAddGames() {
+  const gamesDir = path.join(__dirname, 'public/games');
+  if (!fs.existsSync(gamesDir)) {
+    console.log('Games directory does not exist, creating...');
+    fs.mkdirSync(gamesDir, { recursive: true });
+    return;
+  }
+
+  const files = fs.readdirSync(gamesDir);
+  const zipFiles = files.filter(file => file.endsWith('.zip'));
+
+  console.log(`Found ${zipFiles.length} game(s) in the games folder`);
+
+  zipFiles.forEach(file => {
+    const gameName = path.basename(file, '.zip');
+    const downloadUrl = `/games/${file}`;
+
+    db.get('SELECT id FROM games WHERE download_url = ?', [downloadUrl], (err, row) => {
+      if (err) return console.error(err);
+
+      if (!row) {
+        db.run(
+          `INSERT INTO games (title, description, thumbnail, download_url, play_in_browser) 
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            gameName,
+            `Play ${gameName}`,
+            'https://images.unsplash.com/photo-1576086639808-ddfd21aa668c?auto=format&fit=crop&q=80&w=880',
+            downloadUrl,
+            0
+          ],
+          function(err) {
+            if (err) return console.error(err);
+            console.log(`Added game: ${gameName} (ID: ${this.lastID})`);
+          }
+        );
+      }
+    });
+  });
+}
+
+// ==================== API ROUTES ====================
+
+// --- Games ---
+app.get('/api/games', (req, res) => {
+  db.all('SELECT * FROM games', (err, games) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json(games);
+  });
+});
+
+app.post('/api/games', (req, res) => {
+  const { title, description, thumbnail, download_url, play_in_browser } = req.body;
+  if (!title || !download_url) return res.status(400).json({ error: 'Title and download_url required' });
+
+  db.run(
+    `INSERT INTO games (title, description, thumbnail, download_url, play_in_browser) VALUES (?, ?, ?, ?, ?)`,
+    [title, description, thumbnail, download_url, play_in_browser || 0],
+    function(err) {
+      if (err) return res.status(500).json({ error: 'Error adding game' });
+      res.status(201).json({ message: 'Game added', gameId: this.lastID });
+    }
+  );
+});
+
+app.put('/api/games/:id', (req, res) => {
+  const { id } = req.params;
+  const { title, description, thumbnail, download_url, play_in_browser } = req.body;
+
+  db.run(
+    `UPDATE games SET title=?, description=?, thumbnail=?, download_url=?, play_in_browser=? WHERE id=?`,
+    [title, description, thumbnail, download_url, play_in_browser, id],
+    function(err) {
+      if (err) return res.status(500).json({ error: 'Error updating game' });
+      if (this.changes === 0) return res.status(404).json({ error: 'Game not found' });
+      res.json({ message: 'Game updated' });
+    }
+  );
+});
+
+app.delete('/api/games/:id', (req, res) => {
+  db.run('DELETE FROM games WHERE id=?', [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: 'Error deleting game' });
+    if (this.changes === 0) return res.status(404).json({ error: 'Game not found' });
+    res.json({ message: 'Game deleted' });
+  });
+});
+
+// --- Users ---
+app.get('/api/users', (req, res) => {
+  db.all('SELECT username, email, blazer_id, profile_picture FROM users', (err, users) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json(users);
+  });
+});
+
+// Check if user exists
+app.get('/api/users/:username', (req, res) => {
+  const { username } = req.params;
+  const query = `SELECT COUNT(*) AS count FROM users WHERE username = ?`;
+
+  db.get(query, [username], (err, row) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Failed to check user existence' });
+    } else {
+      res.json({ exists: row.count > 0 });
+    }
+  });
+});
+
+// --- Scores ---
+app.get('/api/scores/:username', (req, res) => {
+  const { username } = req.params;
+  db.all(
+    `SELECT g.id as game_id, g.title as game_title, g.thumbnail, MAX(s.score) as high_score
+     FROM scores s
+     JOIN games g ON s.game_id = g.id
+     WHERE s.username = ?
+     GROUP BY g.id`,
+    [username],
+    (err, scores) => {
+      if (err) return res.status(500).json({ error: 'Database error' });
+      res.json(scores);
+    }
+  );
+});
+
+app.post('/api/scores', (req, res) => {
+  const { username, gameId, score } = req.body;
+  if (!username || !gameId || score === undefined) return res.status(400).json({ error: 'Missing fields' });
+
+  // Auto-create user if not exists
+  db.get('SELECT username FROM users WHERE username=?', [username], (err, user) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+
+    if (!user) {
+      db.run(
+        `INSERT INTO users (username, email, blazer_id, profile_picture) VALUES (?, ?, ?, ?)`,
+        [username, `${username}@guest.com`, username, 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400'],
+        (insertErr) => {
+          if (insertErr) console.error(insertErr);
+        }
+      );
+    }
+
+    // Insert score
+    db.run('INSERT INTO scores (username, game_id, score) VALUES (?, ?, ?)', [username, gameId, score], function(err) {
+      if (err) return res.status(500).json({ error: 'Error saving score' });
+      res.status(201).json({ message: 'Score saved', scoreId: this.lastID });
+    });
+  });
+});
+
+// --- Leaderboard ---
+app.get('/api/leaderboard/:gameId', (req, res) => {
+  const { gameId } = req.params;
+  const limit = req.query.limit || 100;
+
+  db.all(
+    `SELECT 
+       s.username as name,
+       s.username as id,
+       MAX(s.score) as score,
+       u.profile_picture as avatar
+     FROM scores s
+     LEFT JOIN users u ON s.username = u.username
+     WHERE s.game_id = ?
+     GROUP BY s.username
+     ORDER BY score DESC
+     LIMIT ?`,
+    [gameId, limit],
+    (err, leaderboard) => {
+      if (err) return res.status(500).json({ error: 'Database error' });
+      res.json(leaderboard);
+    }
+  );
+});
+
+// --- Friends ---
 app.get('/friends/:username', (req, res) => {
   const { username } = req.params;
   const query = `
@@ -98,62 +291,45 @@ app.get('/friends/:username', (req, res) => {
     JOIN users u ON (u.username = f.requester OR u.username = f.receiver)
     WHERE (f.requester = ? OR f.receiver = ?) AND f.status = 'accepted' AND u.username != ?
   `;
-
   db.all(query, [username, username, username], (err, rows) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Failed to fetch friends list' });
-    } else {
-      res.json(rows);
-    }
+    if (err) return res.status(500).json({ error: 'Failed to fetch friends list' });
+    res.json(rows);
   });
 });
 
-// Send friend request
 app.post('/friends/request', (req, res) => {
   const { requester, receiver } = req.body;
-  const query = `INSERT INTO friends (requester, receiver, status) VALUES (?, ?, 'pending')`;
-
-  db.run(query, [requester, receiver], function (err) {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Failed to send friend request' });
-    } else {
-      res.json({ message: 'Friend request sent', id: this.lastID });
-    }
+  db.run(`INSERT INTO friends (requester, receiver, status) VALUES (?, ?, 'pending')`, [requester, receiver], function(err) {
+    if (err) return res.status(500).json({ error: 'Failed to send friend request' });
+    res.json({ message: 'Friend request sent', id: this.lastID });
   });
 });
 
-// Respond to friend request
 app.put('/friends/respond', (req, res) => {
   const { id, status } = req.body;
-  const query = `UPDATE friends SET status = ? WHERE id = ?`;
-
-  db.run(query, [status, id], function (err) {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Failed to respond to friend request' });
-    } else {
-      res.json({ message: 'Friend request updated' });
-    }
+  db.run(`UPDATE friends SET status=? WHERE id=?`, [status, id], function(err) {
+    if (err) return res.status(500).json({ error: 'Failed to respond to friend request' });
+    res.json({ message: 'Friend request updated' });
   });
 });
 
-// Remove friend
 app.delete('/friends/:id', (req, res) => {
-  const { id } = req.params;
-  const query = `DELETE FROM friends WHERE id = ?`;
-
-  db.run(query, [id], function (err) {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Failed to remove friend' });
-    } else {
-      res.json({ message: 'Friend removed' });
-    }
+  db.run(`DELETE FROM friends WHERE id=?`, [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: 'Failed to remove friend' });
+    res.json({ message: 'Friend removed' });
   });
 });
 
+// ==================== START SERVER ====================
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Backend server running on http://localhost:${PORT}`);
+  console.log(`API: http://localhost:${PORT}/api`);
+  console.log(`Database: launcher.db`);
+  console.log('Games folder: public/games');
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  db.close();
+  process.exit(0);
 });
