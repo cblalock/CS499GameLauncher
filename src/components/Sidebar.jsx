@@ -9,7 +9,8 @@ export default function Sidebar({
   games,
   setActiveGame,
   darkMode,
-  sidebarPosition // Added sidebarPosition prop
+  sidebarPosition, // Added sidebarPosition prop
+  theme // Added theme prop
 }) {
   // Updated tabs order: Friends comes after Profile
   const tabs = ["Games", "Achievements", "Profile", "Friends", "Leaderboard", "Settings"];
@@ -23,9 +24,9 @@ export default function Sidebar({
       } h-full transition-all duration-300 z-50 overflow-hidden ${
         sidebarOpen ? "w-80" : "w-0"
       } ${
-        darkMode
-          ? "bg-gray-900 border-r border-gray-600"
-          : "bg-gradient-to-b from-green-800 to-gray-300 border-yellow-400"
+        theme.background
+      } ${
+        theme.text
       }`}
     >
       <div className="p-6">
@@ -105,8 +106,10 @@ export default function Sidebar({
                       <button
                         key={game.title}
                         onClick={() => {
-                          setActiveGame(game.title);
-                          setSelectedTab("Games");
+                          if (activeGame !== game.title) {
+                            setActiveGame(game.title);
+                            setSelectedTab("Games");
+                          }
                         }}
                         className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all ${
                           darkMode
