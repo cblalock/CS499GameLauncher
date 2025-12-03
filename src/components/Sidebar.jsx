@@ -106,10 +106,8 @@ export default function Sidebar({
                       <button
                         key={game.title}
                         onClick={() => {
-                          if (activeGame !== game.title) {
-                            setActiveGame(game.title);
-                            setSelectedTab("Games");
-                          }
+                          setActiveGame(game.title);
+                          setSelectedTab("Games");
                         }}
                         className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all ${
                           darkMode
