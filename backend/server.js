@@ -54,7 +54,6 @@ function initializeDatabase() {
         username TEXT NOT NULL,
         game_id INTEGER,
         score INTEGER NOT NULL,
-        achieved_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (game_id) REFERENCES games(id),
         FOREIGN KEY (username) REFERENCES users(username)
       )
@@ -79,9 +78,9 @@ function seedDatabase() {
   db.get('SELECT COUNT(*) as count FROM scores', (err, row) => {
     if (row.count === 0) {
       db.run(`INSERT INTO scores (username, game_id, score) VALUES 
-        ('user1', 1, 350),
-        ('user2', 1, 600),
-        ('user3', 1, 250)
+        ('user1', 1, 9),
+        ('user2', 1, 6),
+        ('user3', 1, 12)
       `);
     }
   });
@@ -122,7 +121,7 @@ function scanAddGames() {
            VALUES (?, ?, ?, ?, ?)`,
           [
             gameName,
-            `Play ${gameName}`, // Default description
+            `Play ${gameName}`, // could add description here
             'https://images.unsplash.com/photo-1576086639808-ddfd21aa668c?q=80&w=880&auto=format&fit=crop', // Default thumbnail
             downloadUrl,
             0
@@ -141,7 +140,6 @@ function scanAddGames() {
     });
   });
 }
-
 
 // ==================== API ROUTES ====================
 
@@ -227,16 +225,6 @@ app.delete('/api/games/:id', (req, res) => {
   });
 });
 
-// Get users
-app.get('/api/users', (req, res) => {
-  db.all('SELECT username, email, blazer_id, profile_picture FROM users', (err, users) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
-    res.json(users);
-  });
-});
-
 // Get user's scores
 app.get('/api/scores/:username', (req, res) => {
   const { username } = req.params;
@@ -256,92 +244,37 @@ app.get('/api/scores/:username', (req, res) => {
   );
 });
 
-// Submit a score from game
-app.post('/api/scores', (req, res) => {
-  const { username, gameId, score } = req.body;
+// POST a new score from glycolysim
+app.post('/api/leaderboard', (req, res) => {
+  const { player_name, score, game_id, difficulty } = req.body;
 
-  if (!username || !gameId || score === undefined) {
+  if (!player_name || score === undefined || !game_id) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  db.run(
-    'INSERT INTO scores (username, game_id, score) VALUES (?, ?, ?)',
-    [username, gameId, score],
-    function(err) {
-      if (err) {
-        return res.status(500).json({ error: 'Error saving score' });
-      }
-      res.status(201).json({ 
-        message: 'Score saved',
-        scoreId: this.lastID,
-        score 
-      });
-    }
-  );
-});
-/*
-  this will replace score ^^^ for the showcase, should be able to play the game and
-  enter name that game file will send to here so it can update the leaderboard
+  // Use the scores table 
+  const query = `
+    INSERT INTO scores (username, score, game_id) 
+    VALUES (?, ?, ?)
+  `;
 
-  
-  app.post('/api/scores', (req, res) => {
-  const { username, gameId, score } = req.body;
-
-  if (!username || !gameId || score === undefined) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
-  // First, check if user exists, if not create them
-  db.get('SELECT username FROM users WHERE username = ?', [username], (err, user) => {
+  db.run(query, [player_name, score, game_id], function(err) {
     if (err) {
-      return res.status(500).json({ error: 'Database error' });
+      console.error('Error inserting score:', err);
+      return res.status(500).json({ error: 'Failed to save score' });
     }
-
-    // If user doesn't exist, create them
-    if (!user) {
-      db.run(
-        `INSERT INTO users (username, email, blazer_id, profile_picture) VALUES (?, ?, ?, ?)`,
-        [
-          username,
-          `${username}@guest.com`, // Default email
-          username, // Use username as blazer_id
-          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400' // Default 
-        ],
-        (insertErr) => {
-          if (insertErr) {
-            console.error('Error creating user:', insertErr);
-          } else {
-            console.log(`New user created: ${username}`);
-          }
-        }
-      );
-    }
-
-    // Now insert the score (regardless of whether user existed or was just created)
-    db.run(
-      'INSERT INTO scores (username, game_id, score) VALUES (?, ?, ?)',
-      [username, gameId, score],
-      function(err) {
-        if (err) {
-          console.error('Error saving score:', err);
-          return res.status(500).json({ error: 'Error saving score' });
-        }
-        
-        console.log(`Score saved: ${username} scored ${score} in game ${gameId}`);
-        
-        res.status(201).json({ 
-          message: 'Score saved successfully',
-          scoreId: this.lastID,
-          score,
-          username
-        });
-      }
-    );
+    
+    console.log(`Score saved: ${player_name} - ${score} points (Game ID: ${game_id})`);
+    
+    res.status(201).json({ 
+      message: 'Score added successfully',
+      id: this.lastID 
+    });
   });
-}); */
+});
 
-// leaderboard
-app.get('/api/leaderboard/:gameId', (req, res) => {
+// leaderboard for canvas integration (only showing user's max hiscore)
+/*app.get('/api/leaderboard/:gameId', (req, res) => {
   const { gameId } = req.params;
   const limit = req.query.limit || 100;
 
@@ -355,6 +288,34 @@ app.get('/api/leaderboard/:gameId', (req, res) => {
      LEFT JOIN users u ON s.username = u.username
      WHERE s.game_id = ?
      GROUP BY s.username
+     ORDER BY score DESC
+     LIMIT ?`,
+    [gameId, limit],
+    (err, leaderboard) => {
+      if (err) {
+        console.error('Leaderboard query error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      console.log('Leaderboard data:', leaderboard);
+      res.json(leaderboard);
+    }
+  );
+});*/
+
+// leaderboard for showcase (shows every score, some people may have same initials)
+app.get('/api/leaderboard/:gameId', (req, res) => {
+  const { gameId } = req.params;
+  const limit = req.query.limit || 100;
+
+  db.all(
+    `SELECT 
+       s.id as id,
+       s.username as name,
+       s.score as score,
+       u.profile_picture as avatar
+     FROM scores s
+     LEFT JOIN users u ON s.username = u.username
+     WHERE s.game_id = ?
      ORDER BY score DESC
      LIMIT ?`,
     [gameId, limit],
