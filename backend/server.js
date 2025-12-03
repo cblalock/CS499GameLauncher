@@ -60,7 +60,7 @@ function initializeDatabase() {
       )
     `);
 
-    // Friends table
+    // Friends table (from Version C)
     db.run(`
       CREATE TABLE IF NOT EXISTS friends (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,7 +77,7 @@ function initializeDatabase() {
     console.log('Database tables initialized');
     seedDatabase();
     scanAddGames();
-    seedFriends();
+    seedFriends(); // <-- Added from Version C
   });
 }
 
@@ -90,7 +90,7 @@ function seedDatabase() {
     ('user3', 'user3@uab.edu', 'user3', 'https://images.unsplash.com/photo-1760517340115-7019ac6f3666?auto=format&fit=crop&q=60&w=500')
   `);
 
-  // Scores
+  // Scores (from Version B)
   db.get('SELECT COUNT(*) as count FROM scores', (err, row) => {
     if (err) return console.error(err);
     if (row.count === 0) {
@@ -103,7 +103,7 @@ function seedDatabase() {
   });
 }
 
-// Seed hardcoded friends
+// Hardcoded friends (added from Version C)
 function seedFriends() {
   db.run(`INSERT OR IGNORE INTO friends (requester, receiver, status) VALUES 
     ('user1', 'user3', 'accepted'),
@@ -214,18 +214,12 @@ app.get('/api/users', (req, res) => {
   });
 });
 
-// Check if user exists
+// Added from Version C: check if user exists
 app.get('/api/users/:username', (req, res) => {
   const { username } = req.params;
-  const query = `SELECT COUNT(*) AS count FROM users WHERE username = ?`;
-
-  db.get(query, [username], (err, row) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Failed to check user existence' });
-    } else {
-      res.json({ exists: row.count > 0 });
-    }
+  db.get(`SELECT COUNT(*) AS count FROM users WHERE username = ?`, [username], (err, row) => {
+    if (err) return res.status(500).json({ error: 'Failed to check user existence' });
+    res.json({ exists: row.count > 0 });
   });
 });
 
@@ -246,11 +240,13 @@ app.get('/api/scores/:username', (req, res) => {
   );
 });
 
+// Improved Version C version with auto-create user
 app.post('/api/scores', (req, res) => {
   const { username, gameId, score } = req.body;
-  if (!username || !gameId || score === undefined) return res.status(400).json({ error: 'Missing fields' });
+  if (!username || !gameId || score === undefined)
+    return res.status(400).json({ error: 'Missing fields' });
 
-  // Auto-create user if not exists
+  // Auto-create user if needed
   db.get('SELECT username FROM users WHERE username=?', [username], (err, user) => {
     if (err) return res.status(500).json({ error: 'Database error' });
 
@@ -264,11 +260,14 @@ app.post('/api/scores', (req, res) => {
       );
     }
 
-    // Insert score
-    db.run('INSERT INTO scores (username, game_id, score) VALUES (?, ?, ?)', [username, gameId, score], function(err) {
-      if (err) return res.status(500).json({ error: 'Error saving score' });
-      res.status(201).json({ message: 'Score saved', scoreId: this.lastID });
-    });
+    db.run(
+      'INSERT INTO scores (username, game_id, score) VALUES (?, ?, ?)',
+      [username, gameId, score],
+      function(err) {
+        if (err) return res.status(500).json({ error: 'Error saving score' });
+        res.status(201).json({ message: 'Score saved', scoreId: this.lastID });
+      }
+    );
   });
 });
 
@@ -297,15 +296,18 @@ app.get('/api/leaderboard/:gameId', (req, res) => {
   );
 });
 
-// --- Friends ---
+// --- Friends (added from Version C) ---
 app.get('/friends/:username', (req, res) => {
   const { username } = req.params;
   const query = `
     SELECT f.id, f.requester, f.receiver, f.status, u.profile_picture
     FROM friends f
     JOIN users u ON (u.username = f.requester OR u.username = f.receiver)
-    WHERE (f.requester = ? OR f.receiver = ?) AND f.status = 'accepted' AND u.username != ?
+    WHERE (f.requester = ? OR f.receiver = ?) 
+      AND f.status = 'accepted' 
+      AND u.username != ?
   `;
+
   db.all(query, [username, username, username], (err, rows) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch friends list' });
     res.json(rows);
@@ -314,18 +316,28 @@ app.get('/friends/:username', (req, res) => {
 
 app.post('/friends/request', (req, res) => {
   const { requester, receiver } = req.body;
-  db.run(`INSERT INTO friends (requester, receiver, status) VALUES (?, ?, 'pending')`, [requester, receiver], function(err) {
-    if (err) return res.status(500).json({ error: 'Failed to send friend request' });
-    res.json({ message: 'Friend request sent', id: this.lastID });
-  });
+
+  db.run(
+    `INSERT INTO friends (requester, receiver, status) VALUES (?, ?, 'pending')`,
+    [requester, receiver],
+    function(err) {
+      if (err) return res.status(500).json({ error: 'Failed to send friend request' });
+      res.json({ message: 'Friend request sent', id: this.lastID });
+    }
+  );
 });
 
 app.put('/friends/respond', (req, res) => {
   const { id, status } = req.body;
-  db.run(`UPDATE friends SET status=? WHERE id=?`, [status, id], function(err) {
-    if (err) return res.status(500).json({ error: 'Failed to respond to friend request' });
-    res.json({ message: 'Friend request updated' });
-  });
+
+  db.run(
+    `UPDATE friends SET status=? WHERE id=?`,
+    [status, id],
+    function(err) {
+      if (err) return res.status(500).json({ error: 'Failed to respond to friend request' });
+      res.json({ message: 'Friend request updated' });
+    }
+  );
 });
 
 app.delete('/friends/:id', (req, res) => {
