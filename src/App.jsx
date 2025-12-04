@@ -55,6 +55,8 @@ export default function App() {
     () => localStorage.getItem("fontSize") || "default"
   );
 
+  const [selectedDepartment, setSelectedDepartment] = useState("biology");
+
   useEffect(() => {
     localStorage.setItem("theme", JSON.stringify(theme));
     localStorage.setItem("sidebarPosition", sidebarPosition);
@@ -158,7 +160,8 @@ export default function App() {
         games={games}
         setActiveGame={setActiveGame}
         theme={theme}
-        sidebarPosition={sidebarPosition} // Pass sidebarPosition to Sidebar
+        sidebarPosition={sidebarPosition}
+        setSelectedDepartment={setSelectedDepartment} // Pass sidebarPosition to Sidebar
       />
 
       {/* Main Content */}
@@ -185,6 +188,7 @@ export default function App() {
               handleLaunch={handleLaunch}
               theme={theme}
               thumbnailSize={thumbnailSize}
+              selectedDepartment={selectedDepartment}
             />
           )}
 
