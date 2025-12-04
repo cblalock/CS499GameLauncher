@@ -147,7 +147,7 @@ function scanAddGames() {
             `Play ${gameName}`,
             'https://images.unsplash.com/photo-1576086639808-ddfd21aa668c?auto=format&fit=crop&q=80&w=880',
             downloadUrl,
-            0
+            gameName === 'glycolysim' ? 1 : 0 // Enable play_in_browser for glycolysim
           ],
           function(err) {
             if (err) return console.error(err);
