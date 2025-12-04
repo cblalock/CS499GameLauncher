@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Gamepad2, Star, User, Trophy, Settings, Users, X } from "lucide-react";
 
 export default function Sidebar({
@@ -16,6 +16,18 @@ export default function Sidebar({
   const tabs = ["Games", "Achievements", "Profile", "Friends", "Leaderboard", "Settings"];
 
   const [gamesOpen, setGamesOpen] = useState(false);
+
+  useEffect(() => {
+    // Apply theme changes to the sidebar buttons dynamically
+    const sidebarButtons = document.querySelectorAll(".sidebar-button");
+    sidebarButtons.forEach((button) => {
+      button.className = `w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
+        selectedTab === button.dataset.tab
+          ? theme.activeButton
+          : theme.inactiveButton
+      }`;
+    });
+  }, [theme, selectedTab]);
 
   return (
     <div
@@ -52,6 +64,12 @@ export default function Sidebar({
             return (
               <div key={tab}>
                 <button
+                  data-tab={tab}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
+                    selectedTab === tab
+                      ? theme.activeButton
+                      : theme.inactiveButton
+                  }`}
                   onClick={() => {
                     if (isGamesTab) {
                       setGamesOpen((prev) => !prev);
@@ -63,15 +81,6 @@ export default function Sidebar({
                       setGamesOpen(false);
                     }
                   }}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
-                    selectedTab === tab
-                      ? darkMode
-                        ? "bg-gray-700 text-white"
-                        : "bg-yellow-500 text-white"
-                      : darkMode
-                      ? "bg-gray-800 text-white hover:bg-gray-700"
-                      : "bg-green-700 bg-opacity-50 hover:bg-yellow-500 text-white"
-                  }`}
                 >
                   <div className="flex items-center gap-3">
                     {isGamesTab && <Gamepad2 className="w-5 h-5" />}
@@ -93,11 +102,7 @@ export default function Sidebar({
                         setActiveGame("Biology");
                         setSelectedTab("Games");
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all ${
-                        darkMode
-                          ? "bg-gray-800 text-white hover:bg-gray-700"
-                          : "bg-green-600 text-white hover:bg-yellow-500"
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all ${theme.inactiveButton}`}
                     >
                       Biology Games
                     </button>
@@ -109,11 +114,7 @@ export default function Sidebar({
                           setActiveGame(game.title);
                           setSelectedTab("Games");
                         }}
-                        className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all ${
-                          darkMode
-                            ? "bg-gray-800 text-white hover:bg-gray-700"
-                            : "bg-green-600 text-white hover:bg-yellow-500"
-                        }`}
+                        className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all ${theme.inactiveButton}`}
                       >
                         {game.title}
                       </button>
