@@ -10,7 +10,8 @@ export default function Sidebar({
   setActiveGame,
   darkMode,
   sidebarPosition, // Added sidebarPosition prop
-  theme // Added theme prop
+  theme, // Added theme prop
+  setSelectedDepartment
 }) {
   // Updated tabs order: Friends comes after Profile
   const tabs = ["Games", "Achievements", "Profile", "Friends", "Leaderboard", "Settings"];
@@ -99,26 +100,22 @@ export default function Sidebar({
                   <div className="ml-8 mt-2 space-y-2">
                     <button
                       onClick={() => {
-                        setActiveGame("Biology");
+                        setSelectedDepartment("biology");
                         setSelectedTab("Games");
                       }}
                       className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all ${theme.inactiveButton}`}
                     >
                       Biology Games
                     </button>
-
-                    {games.map((game) => (
-                      <button
-                        key={game.title}
-                        onClick={() => {
-                          setActiveGame(game.title);
-                          setSelectedTab("Games");
-                        }}
-                        className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all ${theme.inactiveButton}`}
-                      >
-                        {game.title}
-                      </button>
-                    ))}
+                    <button
+                      onClick={() => {
+                        setSelectedDepartment("math");
+                        setSelectedTab("Games");
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all ${theme.inactiveButton}`}  
+                    >
+                      Math Games
+                  </button>
                   </div>
                 )}
               </div>
